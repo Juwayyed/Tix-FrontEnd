@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
+import { RouterLink } from "vue-router";
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
@@ -23,11 +24,15 @@ const handleLogout = async () => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
         <div class="flex items-center">
-          <a href="#" class="flex items-center">
+          <RouterLink
+            :to="{ name: 'app.dashboard' }"
+            class="flex items-center hover:opacity-80 transition-opacity"
+          >
             <i data-feather="activity" class="w-8 h-8 text-blue-600"></i>
-            <span class="ml-2 text-xl font-bold text-blue-600">Tix</span>
-          </a>
+            <span class="ml-2 text-xl font-bold teَxt-blue-600">Tix</span>
+          </RouterLink>
         </div>
+
         <div class="flex items-center space-x-4">
           <button
             class="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full"
@@ -37,7 +42,8 @@ const handleLogout = async () => {
               class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"
             ></span>
           </button>
-          <div class="relative" x-data="{ open: false }">
+
+          <div class="relative">
             <button
               @click="toggleUserMenu()"
               class="flex items-center bg-gray-50 px-4 py-2 rounded-full hover:bg-gray-100"
@@ -55,7 +61,7 @@ const handleLogout = async () => {
                 class="w-4 h-4 ml-2 text-gray-500"
               ></i>
             </button>
-            <!-- Dropdown Menu -->
+
             <div
               v-if="showUserMenu"
               class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
@@ -73,13 +79,12 @@ const handleLogout = async () => {
                 Settings
               </a>
               <div class="border-t border-gray-100 my-1"></div>
-              <a
-                href="#"
+              <button
                 @click="handleLogout"
-                class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
               >
                 Log Out
-              </a>
+              </button>
             </div>
           </div>
         </div>

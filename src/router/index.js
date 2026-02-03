@@ -115,20 +115,33 @@ router.beforeEach(async (to, from, next) => {
     document.title = `Tix - ${to.meta.title}`;
   }
 
+  const token = authStore.token;
+
   if (to.meta.requiresAuth) {
-    if (authStore.token) {
-      try {
-        if (!authStore.user) {
+    if (token) {
+      if (!authStore.user) {
+        try {
           await authStore.checkAuth();
+          if (authStore.user) {
+            next();
+          } else {
+            next({ name: "login" });
+          }
+        } catch (error) {
+          next({ name: "login" });
         }
+      } else {
         next();
-      } catch (error) {
-        next({ name: "login" });
       }
     } else {
       next({ name: "login" });
     }
-  } else if (to.meta.requiresUnauth && authStore.token) {
+  } else if (to.meta.requiresUnauth && token) {
+    if (!authStore.user) {
+      try {
+        await authStore.checkAuth();
+      } catch (e) {}
+    }
     const target =
       authStore.user?.role === "admin" ? "admin.dashboard" : "app.dashboard";
     next({ name: target });

@@ -70,13 +70,12 @@ export const useAuthStore = defineStore("auth", {
       this.loading = true;
       try {
         await axiosInstance.post("/logout");
+      } catch (error) {
+        console.error("Logout error:", error);
+      } finally {
         Cookies.remove("token");
         this.user = null;
-        this.error = null;
         router.push({ name: "login" });
-      } catch (error) {
-        this.error = "Logout failed";
-      } finally {
         this.loading = false;
       }
     },
@@ -85,7 +84,8 @@ export const useAuthStore = defineStore("auth", {
       this.loading = true;
       try {
         const response = await axiosInstance.get("/user");
-        this.user = response.data;
+        this.user = response.data.data || response.data;
+        console.log("User Loaded:", this.user);
       } catch (error) {
         this.user = null;
         Cookies.remove("token");

@@ -78,7 +78,7 @@ onMounted(async () => {
           id="description"
           v-model="form.description"
           rows="6"
-          placeholder="Jelaskan masalah Anda secara detail. Sertakan informasi seperti:&#10;- Kapan masalah mulai terjadi&#10;- Apa yang sudah Anda coba&#10;- Dampak masalah terhadap pekerjaan"
+          placeholder="Explain your problem in detail. Include information such as:&#10;- When the issue started&#10;- What you have already tried&#10;- The impact of the issue on your work"
           class="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         ></textarea>
         <div v-if="error?.description" class="flex items-center mt-2">

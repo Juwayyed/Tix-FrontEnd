@@ -43,9 +43,9 @@ onMounted(async () => {
   <!-- Hint: This should include title, description, and create ticket button -->
   <div class="flex items-center justify-between mb-8">
     <div>
-      <h1 class="text-2xl font-bold text-gray-800">Tiket Saya</h1>
+      <h1 class="text-2xl font-bold text-gray-800">My Tickets</h1>
       <p class="text-sm text-gray-500 mt-1">
-        Kelola dan pantau status tiket Anda
+        Manage and monitor your ticket status
       </p>
     </div>
     <RouterLink
@@ -53,7 +53,7 @@ onMounted(async () => {
       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
     >
       <i data-feather="plus" class="w-4 h-4 mr-2"></i>
-      Buat Tiket Baru
+      Create New Ticket
     </RouterLink>
   </div>
 
@@ -82,7 +82,7 @@ onMounted(async () => {
         <div class="relative">
           <input
             type="text"
-            placeholder="Cari tiket..."
+            placeholder="Search ticket..."
             v-model="filters.search"
             class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
@@ -178,7 +178,7 @@ onMounted(async () => {
             <div class="mt-4 flex items-center space-x-4">
               <div class="flex items-center text-sm text-gray-500">
                 <i data-feather="message-square" class="w-4 h-4 mr-1"></i>
-                <span>{{ ticket.ticket_replies.length }} balasan</span>
+                <span>{{ ticket.ticket_replies.length }} Response </span>
               </div>
               <div class="flex items-center text-sm text-gray-500">
                 <i data-feather="clock" class="w-4 h-4 mr-1"></i>

@@ -15,7 +15,7 @@ export const useDashboardStore = defineStore("dashboard", {
       this.loading = true;
 
       try {
-        const response = await axiosInstance.get(`dashboard/statistics`);
+        const response = await axiosInstance.get(`/dashboard/statistics`);
 
         this.statistic = response.data.data;
       } catch (error) {

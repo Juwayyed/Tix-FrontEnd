@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch } from "vue";
+import { onMounted, watch, nextTick } from "vue";
 import { Chart } from "chart.js/auto";
 import { useDashboardStore } from "@/stores/dashboard";
 import { useTicketStore } from "@/stores/ticket";
@@ -21,7 +21,6 @@ const toggleTicketMenu = (ticket) => {
 };
 
 let chart = null;
-
 watch(
   statistic,
   () => {
@@ -48,7 +47,7 @@ onMounted(async () => {
     chart = new Chart(statusCtx, {
       type: "doughnut",
       data: {
-        labels: ["open", "in_progress", "resolved", "rejected"],
+        labels: ["open", "in progress", "resolved", "rejected"],
         datasets: [
           {
             data: [
@@ -57,22 +56,21 @@ onMounted(async () => {
               statistic.value.status_distribution?.resolved,
               statistic.value.status_distribution?.rejected,
             ],
-            backgroundColor: ["#3b82f6", "#f59e0b", "#10b981", "#EF4444"],
+            backgroundColor: ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"],
           },
         ],
       },
       options: {
         responsive: true,
-        plugins: {
+        pluging: {
           legend: {
-            position: bottom,
+            position: "bottom",
           },
         },
         cutout: "70%",
       },
     });
   }
-
   feather.replace();
 });
 </script>

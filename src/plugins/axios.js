@@ -11,14 +11,28 @@ export const axiosInstance = axios.create({
 });
 
 axiosInstance.interceptors.request.use((config) => {
+  const token = Cookies.get("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   const xsrfToken = Cookies.get("XSRF-TOKEN");
   if (xsrfToken) {
     config.headers["X-XSRF-TOKEN"] = xsrfToken;
   }
 
-  const token = Cookies.get("token");
-  if (token && !config.url.includes("/login")) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   return config;
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      Cookies.remove("token");
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/auth/login";
+      }
+    }
+    return Promise.reject(error);
+  },
+);

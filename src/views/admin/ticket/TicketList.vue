@@ -56,9 +56,9 @@ watch(
             v-model="filters.status"
             class="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">Semua Status</option>
+            <option value="">AAll Statuses</option>
             <option value="open">Open</option>
-            <option value="on_progress">On Progress</option>
+            <option value="in_progress">in Progress</option>
             <option value="resolved">Resolved</option>
             <option value="rejected">Rejected</option>
           </select>
@@ -67,7 +67,7 @@ watch(
             v-model="filters.priority"
             class="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">Semua Prioritas</option>
+            <option value="">All Priorities</option>
             <option value="high">High</option>
             <option value="medium">Medium</option>
             <option value="low">Low</option>
@@ -76,10 +76,10 @@ watch(
           <select
             class="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">Semua Tanggal</option>
-            <option value="today">Hari Ini</option>
-            <option value="week">Minggu Ini</option>
-            <option value="month">Bulan Ini</option>
+            <option value="">All Dates</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
           </select>
         </div>
       </div>
