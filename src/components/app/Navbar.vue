@@ -28,7 +28,11 @@ const handleLogout = async () => {
             :to="{ name: 'app.dashboard' }"
             class="flex items-center hover:opacity-80 transition-opacity"
           >
-            <i data-feather="activity" class="w-8 h-8 text-blue-600"></i>
+            <img
+              src="/logo.png"
+              alt="Tix Logo"
+              class="w-8 h-8 object-contain"
+            />
             <span class="ml-2 text-xl font-bold teَxt-blue-600">Tix</span>
           </RouterLink>
         </div>
