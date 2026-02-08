@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, watch, nextTick } from "vue";
+import { onMounted, watch, nextTick, ref } from "vue";
 import { Chart } from "chart.js/auto";
 import { useDashboardStore } from "@/stores/dashboard";
 import { useTicketStore } from "@/stores/ticket";
@@ -16,234 +16,209 @@ const ticketStore = useTicketStore();
 const { tickets } = storeToRefs(ticketStore);
 const { fetchTickets } = ticketStore;
 
+const isLoading = ref(true);
+let chart = null;
+
 const toggleTicketMenu = (ticket) => {
   ticket.showMenu = !ticket.showMenu;
 };
 
-let chart = null;
+const createChart = () => {
+  const canvas = document.getElementById("statusChart");
+  if (!canvas) return;
+
+  const statusCtx = canvas.getContext("2d");
+  if (chart) {
+    chart.destroy();
+  }
+
+  chart = new Chart(statusCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Open", "In Progress", "Resolved", "Rejected"],
+      datasets: [
+        {
+          data: [
+            statistic.value?.status_distibution?.open || 0,
+            statistic.value?.status_distibution?.in_progress || 0,
+            statistic.value?.status_distibution?.resolved || 0,
+            statistic.value?.status_distibution?.rejected || 0,
+          ],
+          backgroundColor: ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"],
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+          },
+        },
+      },
+      cutout: "70%",
+    },
+  });
+};
+
 watch(
-  statistic,
-  () => {
-    if (statistic.value && chart) {
-      chart.data.datasets[0].data = [
-        statistic.value.status_distribution?.open,
-        statistic.value.status_distribution?.in_progress,
-        statistic.value.status_distribution?.resolved,
-        statistic.value.status_distribution?.rejected,
-      ];
-      chart.update();
+  [() => statistic.value, isLoading],
+  async ([newStat, newLoading]) => {
+    if (newStat && !newLoading) {
+      await nextTick();
+      createChart();
     }
   },
   { deep: true },
 );
 
 onMounted(async () => {
-  await fetchTickets();
-  await fetchStatistics();
-
-  const statusCtx = document.getElementById("statusChart")?.getContext("2d");
-
-  if (statusCtx && statistic.value) {
-    chart = new Chart(statusCtx, {
-      type: "doughnut",
-      data: {
-        labels: ["open", "in progress", "resolved", "rejected"],
-        datasets: [
-          {
-            data: [
-              statistic.value.status_distribution?.open,
-              statistic.value.status_distribution?.in_progress,
-              statistic.value.status_distribution?.resolved,
-              statistic.value.status_distribution?.rejected,
-            ],
-            backgroundColor: ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"],
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        pluging: {
-          legend: {
-            position: "bottom",
-          },
-        },
-        cutout: "70%",
-      },
-    });
+  try {
+    await Promise.all([fetchTickets(), fetchStatistics()]);
+  } catch (error) {
+    console.error("Error fetching dashboard data:", error);
+  } finally {
+    isLoading.value = false;
+    await nextTick();
+    feather.replace();
+    createChart();
   }
-  feather.replace();
 });
 </script>
 
 <template>
-  <!-- Statistics Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="p-6">
     <div
-      class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+      v-if="isLoading"
+      class="flex flex-col items-center justify-center h-64"
     >
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Total Tiket</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">
-            {{ statistic?.total_tickets }}
-          </h3>
-        </div>
-        <div class="p-3 bg-blue-50 rounded-lg">
-          <i data-feather="tag" class="w-6 h-6 text-blue-600"></i>
-        </div>
-      </div>
-      <div class="mt-4 flex items-center text-sm">
-        <span class="text-green-500 flex items-center">
-          <i data-feather="trending-up" class="w-4 h-4 mr-1"></i>
-          12%
-        </span>
-        <span class="text-gray-500 ml-2">vs bulan lalu</span>
-      </div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"
+      ></div>
+      <p class="text-gray-500">Loading Dashboard Data...</p>
     </div>
 
-    <div
-      class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
-    >
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Tiket Aktif</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">
-            {{ statistic?.active_tickets }}
-          </h3>
-        </div>
-        <div class="p-3 bg-yellow-50 rounded-lg">
-          <i data-feather="clock" class="w-6 h-6 text-yellow-600"></i>
-        </div>
-      </div>
-      <div class="mt-4 flex items-center text-sm">
-        <span class="text-red-500 flex items-center">
-          <i data-feather="trending-down" class="w-4 h-4 mr-1"></i>
-          3%
-        </span>
-        <span class="text-gray-500 ml-2">vs bulan lalu</span>
-      </div>
-    </div>
-
-    <div
-      class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
-    >
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Selesai</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">
-            {{ statistic?.resolved_tickets }}
-          </h3>
-        </div>
-        <div class="p-3 bg-green-50 rounded-lg">
-          <i data-feather="check-circle" class="w-6 h-6 text-green-600"></i>
-        </div>
-      </div>
-      <div class="mt-4 flex items-center text-sm">
-        <span class="text-green-500 flex items-center">
-          <i data-feather="trending-up" class="w-4 h-4 mr-1"></i>
-          8%
-        </span>
-        <span class="text-gray-500 ml-2">vs bulan lalu</span>
-      </div>
-    </div>
-
-    <div
-      class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
-    >
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-600">Rata-rata Waktu</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">
-            {{ statistic?.avg_resolution_time }} Jam
-          </h3>
-        </div>
-        <div class="p-3 bg-purple-50 rounded-lg">
-          <i data-feather="clock" class="w-6 h-6 text-purple-600"></i>
-        </div>
-      </div>
-      <div class="mt-4 flex items-center text-sm">
-        <span class="text-green-500 flex items-center">
-          <i data-feather="trending-down" class="w-4 h-4 mr-1"></i>
-          15%
-        </span>
-        <span class="text-gray-500 ml-2">vs bulan lalu</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts and Recent Tickets -->
-  <div class="grid grid-cols-12 gap-6">
-    <!-- Recent Tickets -->
-    <div
-      class="col-span-8 bg-white rounded-xl shadow-sm border border-gray-100"
-    >
-      <div class="p-6 border-b border-gray-100">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-800">Tiket Terbaru</h3>
-          <a
-            href="#"
-            class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-            >Lihat Semua</a
-          >
-        </div>
-      </div>
-      <div class="divide-y divide-gray-100">
-        <!-- Ticket Item 1 -->
+    <div v-show="!isLoading">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div
-          v-for="ticket in tickets"
-          :key="ticket.code"
-          class="p-4 hover:bg-gray-50"
+          class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
         >
           <div class="flex items-center justify-between">
             <div>
-              <h4 class="text-sm font-medium text-gray-800">
-                {{ ticket.title }}
-              </h4>
-              <p class="text-xs text-gray-500 mt-1">#{{ ticket.code }}</p>
-              <div class="flex items-center mt-2 space-x-2">
-                <span
-                  class="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full"
-                >
-                  {{ capitalize(ticket.status) }}
-                </span>
-                <span class="text-xs text-gray-500">
-                  {{ DateTime.fromISO(ticket.created_at).toRelative() }}
-                </span>
-              </div>
+              <p class="text-sm font-medium text-gray-600">Total Tickets</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">
+                {{ statistic?.total_tickets || 0 }}
+              </h3>
             </div>
-            <div class="relative">
-              <button
-                @click="toggleTicketMenu(ticket)"
-                class="text-gray-400 hover:text-gray-600"
-              >
-                <i data-feather="more-vertical" class="w-5 h-5"></i>
-              </button>
-              <div
-                v-show="ticket.showMenu"
-                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
-              >
-                <a
-                  :href="`/ticket/${ticket.code}`"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  <i data-feather="eye" class="w-4 h-4 inline-block mr-2"></i>
-                  Lihat Detail
-                </a>
-              </div>
+            <div class="p-3 bg-blue-50 rounded-lg">
+              <i data-feather="tag" class="w-6 h-6 text-blue-600"></i>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Active Tickets</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">
+                {{ statistic?.active_tickets || 0 }}
+              </h3>
+            </div>
+            <div class="p-3 bg-yellow-50 rounded-lg">
+              <i data-feather="clock" class="w-6 h-6 text-yellow-600"></i>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Resolved</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">
+                {{ statistic?.resolved_tickets || 0 }}
+              </h3>
+            </div>
+            <div class="p-3 bg-green-50 rounded-lg">
+              <i data-feather="check-circle" class="w-6 h-6 text-green-600"></i>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="stat-card bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+        >
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Avg. Resolution</p>
+              <h3 class="text-2xl font-bold text-gray-800 mt-1">
+                {{ statistic?.avg_resolution_time || 0 }} Hrs
+              </h3>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-lg">
+              <i data-feather="clock" class="w-6 h-6 text-purple-600"></i>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Status Distribution Chart -->
-    <div
-      class="col-span-4 bg-white rounded-xl shadow-sm p-6 border border-gray-100"
-    >
-      <h3 class="text-lg font-semibold text-gray-800 mb-4">
-        Distribusi Status
-      </h3>
-      <canvas id="statusChart" height="300"></canvas>
+      <div class="grid grid-cols-12 gap-6">
+        <div
+          class="col-span-12 lg:col-span-8 bg-white rounded-xl shadow-sm border border-gray-100"
+        >
+          <div
+            class="p-6 border-b border-gray-100 flex justify-between items-center"
+          >
+            <h3 class="text-lg font-semibold text-gray-800">Recent Tickets</h3>
+          </div>
+          <div class="divide-y divide-gray-100">
+            <div
+              v-for="ticket in tickets"
+              :key="ticket.code"
+              class="p-4 hover:bg-gray-50"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-800">
+                    {{ ticket.title }}
+                  </h4>
+                  <p class="text-xs text-gray-500 mt-1">#{{ ticket.code }}</p>
+                  <div class="flex items-center mt-2 space-x-2">
+                    <span
+                      class="px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full"
+                    >
+                      {{ capitalize(ticket.status) }}
+                    </span>
+                    <span class="text-xs text-gray-500">
+                      {{ DateTime.fromISO(ticket.created_at).toRelative() }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="col-span-12 lg:col-span-4 bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col items-center"
+        >
+          <h3 class="text-lg font-semibold text-gray-800 mb-6 self-start">
+            Status Distribution
+          </h3>
+          <div class="relative w-full aspect-square max-w-[280px]">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

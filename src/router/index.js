@@ -1,15 +1,15 @@
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
 import Admin from "@/layouts/Admin.vue";
 import Auth from "@/layouts/Auth.vue";
-import { useAuthStore } from "@/stores/auth";
+import App from "@/layouts/App.vue";
 import Dashboard from "@/views/admin/Dashboard.vue";
 import TicketList from "@/views/admin/ticket/TicketList.vue";
 import TicketDetail from "@/views/admin/ticket/TicketDetail.vue";
-import Login from "@/views/auth/Login.vue";
-import { createRouter, createWebHistory } from "vue-router";
-import App from "@/layouts/App.vue";
 import AppDashboard from "@/views/app/Dashboard.vue";
 import AppTicketDetail from "@/views/app/TicketDetail.vue";
 import AppTicketCreate from "@/views/app/TicketCreate.vue";
+import Login from "@/views/auth/Login.vue";
 import Register from "@/views/auth/Register.vue";
 
 const router = createRouter({
@@ -91,7 +91,7 @@ const router = createRouter({
           component: Login,
           meta: {
             requiresUnauth: true,
-            title: "Login to your account",
+            title: "Login",
           },
         },
         {
@@ -100,7 +100,7 @@ const router = createRouter({
           component: Register,
           meta: {
             requiresUnauth: true,
-            title: "Create a new account",
+            title: "Register",
           },
         },
       ],
@@ -116,38 +116,40 @@ router.beforeEach(async (to, from, next) => {
   }
 
   const token = authStore.token;
+  const isAuthenticated = !!token;
 
   if (to.meta.requiresAuth) {
-    if (token) {
-      if (!authStore.user) {
-        try {
-          await authStore.checkAuth();
-          if (authStore.user) {
-            next();
-          } else {
-            next({ name: "login" });
-          }
-        } catch (error) {
-          next({ name: "login" });
-        }
-      } else {
-        next();
-      }
-    } else {
-      next({ name: "login" });
+    if (!isAuthenticated) {
+      return next({ name: "login" });
     }
-  } else if (to.meta.requiresUnauth && token) {
+
     if (!authStore.user) {
       try {
         await authStore.checkAuth();
-      } catch (e) {}
+        if (!authStore.user) {
+          return next({ name: "login" });
+        }
+      } catch (error) {
+        return next({ name: "login" });
+      }
+    }
+    return next();
+  }
+
+  if (to.meta.requiresUnauth && isAuthenticated) {
+    if (!authStore.user) {
+      try {
+        await authStore.checkAuth();
+      } catch (e) {
+        return next();
+      }
     }
     const target =
       authStore.user?.role === "admin" ? "admin.dashboard" : "app.dashboard";
-    next({ name: target });
-  } else {
-    next();
+    return next({ name: target });
   }
+
+  next();
 });
 
 export default router;

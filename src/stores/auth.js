@@ -81,6 +81,7 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async checkAuth() {
+      if (this.user) return;
       this.loading = true;
       try {
         const response = await axiosInstance.get("/user");
